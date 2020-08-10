@@ -1,6 +1,6 @@
 # Data_Analysis_R
 
-Repository containing scripts to analyse the data based on csv files exported from Wireshark \ 
+Repository containing scripts to analyse the data based on csv files exported from Wireshark  
 
 1). First part "Training Scripts" contains scripts related to the exercised created on a subject "Data Analisis" at the AGH University of Science and Technology \
 \
