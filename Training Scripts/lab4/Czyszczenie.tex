@@ -1,0 +1,383 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Lab.4 - Odpowiednie Przygotowanie Danych},
+            pdfauthor={Jakub Bryl},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Lab.4 - Odpowiednie Przygotowanie Danych}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Jakub Bryl}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{11 11 2019}
+
+
+\begin{document}
+\maketitle
+
+\hypertarget{przygotowanie-bibliotek}{%
+\subsection{Przygotowanie bibliotek}\label{przygotowanie-bibliotek}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{require}\NormalTok{(ggplot2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{require}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: dplyr
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{require}\NormalTok{(readr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: readr
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{require}\NormalTok{(tidyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: tidyr
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{require}\NormalTok{(stats)}
+\KeywordTok{require}\NormalTok{(stringr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: stringr
+\end{verbatim}
+
+\hypertarget{zadanie-1-proszux119-wczutaux107-plik-pomiaryzapylenia.txt-oraz-doprowadziux107-do-otrzymania-poprawnego-technicznie-zbioru-danych.}{%
+\subsection{Zadanie 1: Proszę wczutać plik pomiaryZapylenia.txt oraz
+doprowadzić do otrzymania poprawnego technicznie zbioru
+danych.}\label{zadanie-1-proszux119-wczutaux107-plik-pomiaryzapylenia.txt-oraz-doprowadziux107-do-otrzymania-poprawnego-technicznie-zbioru-danych.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dane <-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\DataTypeTok{file=}\StringTok{"pomiaryZapylenia.txt"}\NormalTok{, }\DataTypeTok{header =}\NormalTok{ F)}
+\KeywordTok{summary}\NormalTok{(dane)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                 V1       V2   
+##  al. Krasinskiego:1    22 :1  
+##  Marek           :1    48 :1  
+##  Marta           :1    56*:1  
+##  Monika          :1    68*:1  
+##  Nowe Huta       :1    9  :1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Tutaj przy Col_names = c() podajemy nowe nazwy kolumn, a przy col_types podajemy typ zmiennych kazdej z kolumn, odpowiednio c = character n = numeric}
+\NormalTok{dane <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\DataTypeTok{file=}\StringTok{"pomiaryZapylenia.txt"}\NormalTok{, }\DataTypeTok{col_names =}  \KeywordTok{c}\NormalTok{(}\StringTok{"Miejsce"}\NormalTok{, }\StringTok{"Zapylenie"}\NormalTok{), }\DataTypeTok{col_types =} \StringTok{"cn"}\NormalTok{)}
+\KeywordTok{summary}\NormalTok{(dane)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Miejsce            Zapylenie   
+##  Length:5           Min.   : 9.0  
+##  Class :character   1st Qu.:22.0  
+##  Mode  :character   Median :48.0  
+##                     Mean   :40.6  
+##                     3rd Qu.:56.0  
+##                     Max.   :68.0
+\end{verbatim}
+
+\hypertarget{zadanie-2-oczyszczenie-danych-i-przerobienie-na-dany-typu-tidy}{%
+\subsection{Zadanie 2: Oczyszczenie danych i przerobienie na dany typu
+Tidy}\label{zadanie-2-oczyszczenie-danych-i-przerobienie-na-dany-typu-tidy}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"IRCCyN_IVC_1080i_Database_Score.csv"}\NormalTok{, }\DataTypeTok{skip =} \DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Missing column names filled in: 'X1' [1], 'X2' [2], 'X42' [42],
+## 'X44' [44]
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Duplicated column names deduplicated: '1' => '1_1' [45], '2' =>
+## '2_1' [46], '3' => '3_1' [47], '4' => '4_1' [48], '5' => '5_1' [49], '6'
+## => '6_1' [50], '7' => '7_1' [51], '8' => '8_1' [52], '9' => '9_1' [53],
+## '10' => '10_1' [54], '11' => '11_1' [55], '12' => '12_1' [56], '13' =>
+## '13_1' [57], '14' => '14_1' [58], '15' => '15_1' [59], '16' => '16_1' [60],
+## '17' => '17_1' [61], '18' => '18_1' [62], '19' => '19_1' [63], '20' =>
+## '20_1' [64], '21' => '21_1' [65], '22' => '22_1' [66], '23' => '23_1' [67],
+## '24' => '24_1' [68], '25' => '25_1' [69], '26' => '26_1' [70], '27' =>
+## '27_1' [71], '28' => '28_1' [72], '29' => '29_1' [73], '30' => '30_1' [74],
+## '31' => '31_1' [75], '32' => '32_1' [76], '33' => '33_1' [77], '34' =>
+## '34_1' [78], '35' => '35_1' [79], '36' => '36_1' [80], '37' => '37_1' [81],
+## '38' => '38_1' [82], '39' => '39_1' [83]
+\end{verbatim}
+
+\begin{verbatim}
+## Parsed with column specification:
+## cols(
+##   .default = col_double(),
+##   X2 = col_character(),
+##   `30` = col_logical(),
+##   X42 = col_logical(),
+##   X44 = col_logical(),
+##   `2_1` = col_logical(),
+##   `4_1` = col_logical(),
+##   `5_1` = col_logical(),
+##   `6_1` = col_logical(),
+##   `17_1` = col_logical(),
+##   `20_1` = col_logical(),
+##   `22_1` = col_logical(),
+##   `23_1` = col_logical(),
+##   `24_1` = col_logical(),
+##   `25_1` = col_logical(),
+##   `26_1` = col_logical(),
+##   `27_1` = col_logical(),
+##   `28_1` = col_logical(),
+##   `29_1` = col_logical(),
+##   `31_1` = col_logical(),
+##   `32_1` = col_logical()
+##   # ... with 7 more columns
+## )
+\end{verbatim}
+
+\begin{verbatim}
+## See spec(...) for full column specifications.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#Zczytujemy tylko do 41 kolumny}
+\NormalTok{data_}\DecValTok{2}\NormalTok{ <-}\StringTok{ }\NormalTok{data[,}\DecValTok{1}\OperatorTok{:}\DecValTok{41}\NormalTok{]}
+\CommentTok{#Grupujemy dane po kolumnie tester od kolumny ocena z wyłączeniem kolumn X1 oraz X2}
+\NormalTok{data_}\DecValTok{2}\NormalTok{ <-}\StringTok{ }\NormalTok{data_}\DecValTok{2} \OperatorTok{%>%}\StringTok{ }\KeywordTok{gather}\NormalTok{( }\DataTypeTok{key =} \StringTok{"Tester"}\NormalTok{, }\DataTypeTok{value =} \StringTok{"Ocena"}\NormalTok{, }\OperatorTok{-}\NormalTok{X1, }\OperatorTok{-}\NormalTok{X2)}
+\CommentTok{#Zmiany kosmetyczne odnosnie nazewnictwa kolumny X1 oraz X2, dodatkowo czyscimy z typu NA}
+\KeywordTok{colnames}\NormalTok{(data_}\DecValTok{2}\NormalTok{)[}\DecValTok{2}\NormalTok{] <-}\StringTok{ "Zrodlo"}
+\NormalTok{data_}\DecValTok{2}\OperatorTok{$}\NormalTok{X1[}\KeywordTok{is.na}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{X1)] =}\StringTok{ }\DecValTok{0}
+\NormalTok{data_}\DecValTok{2}\OperatorTok{$}\NormalTok{X1[data_}\DecValTok{2}\OperatorTok{$}\NormalTok{X1 }\OperatorTok{>}\StringTok{ }\DecValTok{0}\NormalTok{] =}\StringTok{ }\DecValTok{1}
+\KeywordTok{colnames}\NormalTok{(data_}\DecValTok{2}\NormalTok{)[}\DecValTok{1}\NormalTok{] <-}\StringTok{ "Brak Kompresji"}
+
+\CommentTok{#Inicjalizacja nowych kolumn}
+\NormalTok{data_}\DecValTok{2}\OperatorTok{$}\StringTok{`}\DataTypeTok{Zlozonosc Kompresji}\StringTok{`}\NormalTok{ =}\StringTok{ }\DecValTok{0}
+\NormalTok{data_}\DecValTok{2}\OperatorTok{$}\StringTok{`}\DataTypeTok{Typ}\StringTok{`}\NormalTok{ =}\StringTok{ }\DecValTok{0}
+
+\ControlFlowTok{for}\NormalTok{ (y }\ControlFlowTok{in} \KeywordTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{, }\KeywordTok{length}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo)))\{}
+  \CommentTok{#Wyciagamy wspolczynnik kompresji z danego wiersza i dodajemy go do odpowiedniej kolumny}
+\NormalTok{  data_}\DecValTok{2}\OperatorTok{$}\StringTok{`}\DataTypeTok{Zlozonosc Kompresji}\StringTok{`}\NormalTok{[y] <-}\StringTok{ }\NormalTok{stringr}\OperatorTok{::}\KeywordTok{str_extract}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y], }\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{d*M"}\NormalTok{)}
+  \CommentTok{#Wyciagamy typ filmu(jego rozszerzenie).}
+\NormalTok{  data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Typ[y] <-}\StringTok{ }\NormalTok{stringr}\OperatorTok{::}\KeywordTok{str_extract}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y], }\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{.(}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{w\{3\})"}\NormalTok{)}
+\NormalTok{  data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Typ[y] <-}\StringTok{ }\KeywordTok{unlist}\NormalTok{(}\KeywordTok{strsplit}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y], }\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{))[}\DecValTok{2}\NormalTok{]}
+  
+  \CommentTok{#Oczyszczamy kolumne zrodlo w wartosci ktore juz wczesniej wyciagnelismy i }
+  \CommentTok{#uporzadkolismy w dedykowanych kolumnach - usuwanie redundantnych informacji}
+  \ControlFlowTok{if}\NormalTok{ (data_}\DecValTok{2}\OperatorTok{$}\StringTok{`}\DataTypeTok{Brak Kompresji}\StringTok{`}\NormalTok{[y] }\OperatorTok{==}\StringTok{ }\DecValTok{1}\NormalTok{) \{}
+\NormalTok{    data_}\DecValTok{2}\OperatorTok{$}\StringTok{`}\DataTypeTok{Zlozonosc Kompresji}\StringTok{`}\NormalTok{[y] =}\StringTok{ }\DecValTok{0}
+\NormalTok{    data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y] <-}\StringTok{ }\KeywordTok{unlist}\NormalTok{(}\KeywordTok{strsplit}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y], }\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{))[}\DecValTok{1}\NormalTok{]}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y] <-}\StringTok{ }\KeywordTok{unlist}\NormalTok{(}\KeywordTok{strsplit}\NormalTok{(data_}\DecValTok{2}\OperatorTok{$}\NormalTok{Zrodlo[y], }\StringTok{".}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{d*M"}\NormalTok{))[}\DecValTok{1}\NormalTok{]}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\KeywordTok{summary}\NormalTok{(data_}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  Brak Kompresji     Zrodlo             Tester              Ocena       
+##  Min.   :0.000   Length:7488        Length:7488        Min.   :  0.00  
+##  1st Qu.:0.000   Class :character   Class :character   1st Qu.: 34.00  
+##  Median :0.000   Mode  :character   Mode  :character   Median : 55.00  
+##  Mean   :0.125                                         Mean   : 52.04  
+##  3rd Qu.:0.000                                         3rd Qu.: 70.00  
+##  Max.   :1.000                                         Max.   :100.00  
+##                                                        NA's   :3328    
+##  Zlozonosc Kompresji     Typ           
+##  Length:7488         Length:7488       
+##  Class :character    Class :character  
+##  Mode  :character    Mode  :character  
+##                                        
+##                                        
+##                                        
+## 
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{show}\NormalTok{(data_}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 7,488 x 6
+##    `Brak Kompresji` Zrodlo  Tester Ocena `Zlozonosc Kompresji` Typ  
+##               <dbl> <chr>   <chr>  <dbl> <chr>                 <chr>
+##  1                1 credits 1         80 0                     yuv  
+##  2                0 credits 1         20 4M                    yuv  
+##  3                0 credits 1         60 6M                    yuv  
+##  4                0 credits 1         40 7M                    yuv  
+##  5                0 credits 1         60 8M                    yuv  
+##  6                0 credits 1         60 9M                    yuv  
+##  7                0 credits 1         60 10M                   yuv  
+##  8                0 credits 1        100 14M                   yuv  
+##  9                1 golf    1        100 0                     yuv  
+## 10                0 golf    1         20 1M                    yuv  
+## # ... with 7,478 more rows
+\end{verbatim}
+
+
+\end{document}

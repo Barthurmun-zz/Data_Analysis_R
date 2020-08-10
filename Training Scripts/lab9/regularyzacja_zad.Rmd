@@ -1,0 +1,160 @@
+---
+title: "Lab09"
+author: "Jakub Bryl"
+date: "11 12 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(MASS)
+require(boot)
+require(splines)
+require(png)
+require(readr)
+require(dplyr)
+require(knitr)
+library(glmnet)
+library(leaps)
+```
+
+```{r}
+data<-read_csv("all_one_file.csv")
+
+#Bierzemy tlyko DB1
+data_db1 <-filter(data, `DB` == "DB1") %>% subset(.,select = -c(DB,Source_file,Ref_video,Resolution, Color_encoding,flickering, letterbox, pillarbox, blockout, freezing, fps, two_res, one_res, duration))
+
+#Przeksztalcamy zmienna kategoryczna na numeryczna
+data_db1$Subject_score <- as.numeric(data_db1$Subject_score)
+#data_db1$duration <- as.numeric(data_db1$duration)
+data_db1$noise <- as.numeric(data_db1$noise)
+data_db1 <- na.omit(data_db1)
+
+
+#Normalizacja
+data_db1 <- scale(data_db1, center = TRUE, scale = TRUE) %>% as.data.frame()
+summary(data_db1)
+
+```
+```{r}
+
+model <- lm(Subject_score~., data_db1)
+summary(model)
+
+
+```
+
+Znalezienie najlepszeog podzbioru dla swojego zbioru danych. Rozdzielenie wspolczynnikow (regsubsets -> regression sub sets)
+```{r}
+library(leaps)
+regfit.full=regsubsets(Subject_score~.,data=data_db1)
+summary(regfit.full)
+```
+
+Wyznaczenie ile wspolczynnikow daje najlepsze model (tutaj miniumum wypada w 10 ale roznica miedzy 7 a 10 jest niewielka wiec mozna rozwazyc rowniez ta liczbe)
+```{r}
+#nvmax -> Maksymalna ilosc wspolczynnikow ktore bierzemy pod uwage
+regfit.full=regsubsets(Subject_score~.,data=data_db1, nvmax=17)
+reg.summary=summary(regfit.full)
+names(reg.summary)
+plot(reg.summary$cp,xlab="Number of Variables",ylab="Cp")
+a=which.min(reg.summary$cp)
+points(a,reg.summary$cp[a],pch=20,col="red")
+```
+
+Na tym wykresie mozemy zaobserwowac ktore (zamalowane na czarno) wspolczynniki daja najlepszy model (celujemy w jak najmniejsze cp).
+```{r}
+plot(regfit.full,scale="Cp")
+coef(regfit.full,10)
+```
+
+```{r, echo=TRUE, warning=FALSE}
+dim(data_db1)
+set.seed(1)
+train=sample(seq(202),160,replace=FALSE)
+train
+regfit.fwd=regsubsets(Subject_score~.,data=data_db1[train,],nvmax=17,method="forward")
+```
+
+```{r, echo=TRUE, warning=FALSE}
+val.errors=rep(NA,13)
+x.test=model.matrix(Subject_score~.,data=data_db1[-train,])
+for(i in 1:13){
+  coefi=coef(regfit.fwd,id=i)
+  pred=x.test[,names(coefi)]%*%coefi
+  val.errors[i]=mean((data_db1$Subject_score[-train]-pred)^2)
+}
+plot(sqrt(val.errors),ylab="Root MSE",ylim=c(0,1.0),pch=19,type="b")
+points(sqrt(regfit.fwd$rss[-1]/400),col="blue",pch=19,type="b")
+legend("topright",legend=c("Training","Validation"),col=c("blue","black"),pch=19)
+```
+
+Kros validacja
+
+```{r}
+predict.regsubsets=function(object,newdata,id,...){
+  form=as.formula(object$call[[2]])
+  mat=model.matrix(form,newdata)
+  coefi=coef(object,id=id)
+  mat[,names(coefi)]%*%coefi
+}
+```
+
+```{r}
+set.seed(11)
+data_db1_small = data_db1
+folds=sample(rep(1:10,length=nrow(data_db1_small)))
+folds
+table(folds)
+cv.errors=matrix(NA,10,13)
+for(k in 1:10){
+  best.fit=regsubsets(Subject_score~.,data=data_db1_small[folds!=k,],nvmax=13,method="forward")
+  for(i in 1:13){
+    pred=predict(best.fit,data_db1_small[folds==k,],id=i)
+    cv.errors[k,i]=mean( (data_db1_small$Subject_score[folds==k]-pred)^2)
+  }
+}
+rmse.cv=sqrt(apply(cv.errors,2,mean))
+plot(rmse.cv,pch=19,type="b")
+```
+
+Jak widzimy najlepszy model jest dla 6 wartosci (min)
+
+# REGULARYZACJA
+
+## Ridge Regression
+```{r}
+library(glmnet)
+x=model.matrix(Subject_score~.-1,data=data_db1) 
+y=data_db1$Subject_score
+
+#alpha=0 -> mowi ze regularyzacja l2
+fit.ridge=glmnet(x,y,alpha=0)
+plot(fit.ridge,xvar="lambda",label=TRUE)
+cv.ridge=cv.glmnet(x,y,alpha=0)
+plot(cv.ridge)
+```
+
+
+## Lasso
+```{r}
+fit.lasso=glmnet(x,y)
+plot(fit.lasso,xvar="lambda",label=TRUE)
+cv.lasso=cv.glmnet(x,y)
+plot(cv.lasso)
+coef(cv.lasso)
+```
+
+Wybór parametru lambda
+```{r, echo=TRUE, warning=FALSE}
+lasso.tr=glmnet(x[train,],y[train])
+lasso.tr
+pred=predict(lasso.tr,x[-train,])
+dim(pred)
+rmse= sqrt(apply((y[-train]-pred)^2,2,mean))
+plot(log(lasso.tr$lambda),rmse,type="b",xlab="Log(lambda)")
+lam.best=lasso.tr$lambda[order(rmse)[1]]
+lam.best
+coef(lasso.tr,s=lam.best)
+```

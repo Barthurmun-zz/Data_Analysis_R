@@ -1,0 +1,86 @@
+---
+title: "Lab05"
+author: "Jakub Bryl"
+date: "13 11 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Zadanie 1: Przychod per osoba 
+
+Dane zebrane z strony = https://www.gapminder.org/data/
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(tidyverse)
+require(countrycode)
+```
+
+
+# Zczytanie zbioru
+
+dane[1] -> sprawia ze wyciagamy caly data.frame czyli cala kolumne z jej nazwa
+dane[[1]] -> wyciagamy same elementy kolumny zapsane jako vector
+```{r}
+income <- read_csv("dane.csv")
+income$country <- countrycode(sourcevar = income[[1]], origin = 'country.name', destination = 'continent')
+colnames(income)[1] <- 'Continent'
+```
+
+# Segregowanie zbioru (tidy)
+
+```{r}
+# Pomijamy kontynent ktory powinien zostac niezmienny
+data <- income %>% gather( key = "Year", value="Income", -Continent)
+data <- filter(data, Year >= 1900 & Year < 2016)
+# Grupowanie danych z tego samego kontynentu  & roku oraz obliczanie sredniej
+data <- data %>% group_by(Continent, Year) %>% summarise(income = mean(Income))
+colnames(data)[3] <- 'Income'
+# Przeksztalcenie danych w odpowiednie typy danych
+data$Continent <- as_factor(data$Continent)
+data$Year <- as.numeric(data$Year)
+```
+
+# Prezentowanie wykresow
+
+```{r}
+ggplot(data = data, aes(x=Year, y=Income , color=Continent)) + geom_line() 
+```
+
+## Tibia 
+
+# Przygotowanie odpowiednich bibliotek
+
+```{r, warning=FALSE}
+require(rvest)
+```
+
+# Zaladowanie zmiennych
+```{r}
+url_ <- 'https://www.tibia.com/community/?subtopic=worlds&world=Secura&order=level_desc'
+# Przeczytanie danych znajdujacych sie pod url_ -> zmiennej
+world_html <- read_html(url_)
+# Odpowiednio dobrany Xpath do pierwszej glownej tabeli
+webpage <- html_nodes(world_html, xpath = '//table') 
+# Wyciagniecie z glownej tabeli ta ktora nas interesuje i przeksztalcenie do odpowiedniego formatu
+webpage_final <- html_table(webpage[6]) %>% as.data.frame()
+# Zmiana nazw "na sztywno"
+colnames(webpage_final) <- c("Name", "Level", "Vocation")
+# Pominiecie pierwszego wiersza
+webpage_final <- webpage_final[-1,]
+# Formatowanie do odpowiedniego typu zmiennych
+webpage_final$Level <- as.numeric(webpage_final$Level)
+webpage_final$Vocation <- as.factor(webpage_final$Vocation)
+```
+
+# Wizualizacja
+```{r}
+ggplot(data = webpage_final, aes(x=Level, fill= Vocation)) + geom_histogram(position = "stack")
+ggplot(data = webpage_final, aes(x=Vocation, y = Level)) + geom_boxplot()
+ggplot(data = webpage_final, aes(x=Vocation)) + geom_bar()
+```
+

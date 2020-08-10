@@ -1,0 +1,95 @@
+---
+title: "lab06-Regresja"
+author: "Jakub Bryl"
+date: "25 11 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(knitr)
+```
+
+# Wczytanie Danych
+
+Dane pochodzą z laboratorium o wizualizacji danych od dr.Ruska. Opisują zależności przejechanych km, cen paliwa, licznika i czy tankowanie było do pełna (zmienna kategoryczna). Wybrałem te dane ponieważ po lab02 zacząłem próbować rzeczy związane z regresją ale nie dokończYłem ich, dlatego wykorzystując wiedzę z ostaniego laboratorium chciałem jeszcze raz użyć tych danych.
+
+```{r}
+data <- read_csv("Samochod.csv")%>%
+mutate(Data.tankowania=as.Date(Data.tankowania))
+print(data$Data.tankowania)
+```
+
+# Dopasowanie regresji liniowej - ggplot:
+
+```{r}
+data %>%arrange(Data.tankowania)%>%mutate(paliwo=cumsum(Cena.tankowania/Cena.jednostkowa))%>%
+  ggplot(data=.,aes(x=Licznik,y=paliwo))+geom_point()+geom_line()+stat_smooth(method='lm')
+
+# Dodanie dodatkowych zmiennych (mutate).
+data%>%arrange(Data.tankowania)%>%mutate(paliwo=cumsum(Cena.tankowania/Cena.jednostkowa))%>%
+  mutate(licznik100=Licznik/100)->data.100
+
+# Nowy wykres do dopasowania regresji
+plot1<-ggplot(data=data.100,aes(x=licznik100,y=paliwo))+
+  geom_point()+geom_line()+stat_smooth(method='lm')
+
+ggplot(data=data.100,aes(x=licznik100,y=paliwo))+geom_point()+
+  geom_line()+stat_smooth(method='lm')
+
+```
+
+# Dopasowanie regresji liniowej - manualnie:
+
+```{r}
+
+#Model okresla zaleznosc miedzy paliwem w litrach a licznikiem na 100km.
+model <- lm(paliwo~licznik100, data=data.100)
+summary(model)
+
+#Wyliczenie predykcji i dodanie wartości jako dodatkowej kolumny
+data.100$prediction = predict(model, newdata = data.100)
+
+#Obliczenie epsilon'u - roznicy miedzy predykcja a cana paliwa
+data.100$epsilon <- data.100$paliwo - data.100$prediction
+
+plot(model)
+plot(data.100$epsilon)
+```
+
+
+# Wizualizacja recznie dopasowanej regresji liniowej
+
+```{r}
+plot2 <- plot1 + geom_abline(slope=model$coefficients[2], 
+                             intercept=model$coefficients[1], color = "green")
+plot2
+```
+
+# Sprwadzenie jakości modelu:
+
+RSE - bląd standardowy odchyłek
+```{r}
+summary(model)$r.squere
+```
+
+R^2 - wariancja wyjaśniania przez model
+```{r}
+summary(model)$sigma
+```
+
+Współczynniki:
+```{r}
+A <- data.frame(summary(model)$coef)
+A[,4] <- format.pval(summary(model)$coeff[,4], eps=0.001, digits=2)
+kable(A, digits=2, col.names = c('Współczynnik', 'SE', 't', 'p-value'))
+kable(cor(data.100[c(3,4,7,8)], method = "pearson"), digits=3)
+```
+
+Biorąc wszystko pod uwagę można dokonać podsumowania, iż regresja jest dobrze dopasowana.

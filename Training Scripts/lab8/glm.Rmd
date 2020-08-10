@@ -1,0 +1,100 @@
+---
+title: "Regresja Logistyczna"
+author: "Jakub Bryl"
+date: "9 12 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Regresja Logistyczna
+
+Zbiór: Iris
+
+Źródło: https://archive.ics.uci.edu/ml/datasets/iris
+
+Powód: Najbardziej rozpoznawalny zbiór danych do klasyfikacji oraz nauczania maszynowego ( chęć sprawdzenia poprawności rozwiązania) 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(MASS)
+require(boot)
+require(splines)
+require(png)
+require(readr)
+require(dplyr)
+#install.packages("png")
+```
+
+## Wczytywanie danych
+
+długość i szerokość wyrażone są w [cm]
+
+s-l -> Sepal-lenght
+
+s-w -> Sepal-width
+
+p-l -> Petal-lenght
+
+p-w -> Petal-width
+```{r}
+data_2 <- read_csv("iris_data.csv", col_types = cols(class = col_factor(
+  levels = c("Iris-setosa", "Iris-versicolor", "Iris-virginica"))))
+
+summary(data_2)
+```
+
+## Wizualizacja
+
+Można zaobserwować znacznie większy wpływ / rozróżnienie zmiennej kategorycznej po parametrach 'p-l' oraz 'p-w' niż 's-l' oraz 's-w'
+```{r}
+ggplot(data = data_2, aes(x=`s-l`, fill= class)) + geom_histogram()
+ggplot(data = data_2, aes(x=`s-w`, fill= class)) + geom_histogram()
+ggplot(data = data_2, aes(x=`p-l`, fill= class)) + geom_histogram()
+ggplot(data = data_2, aes(x=`p-w`, fill= class)) + geom_histogram()
+
+ggplot(data = data_2, aes(x=`class`, y=`s-l`)) + geom_boxplot()
+```
+
+## Rozdzielenie zbioru na dwa zbiory (testowy oraz treningowy) 
+
+Rodzielamy nasz zbiór danych na dwa zbiory w sposób losowy tak aby nie pominąc cennych informacji które w przypadku wycięcia wartości moglibyśmy urtacić.
+```{r}
+rnd <- sample(seq(1, 2), size = nrow(data_2), replace = TRUE, prob = c(.7, .3))
+train <- data_2[rnd == 1,]
+test <- data_2[rnd == 2,]
+```
+
+## Model
+
+Zmiany (próby użycia funkcji poly, base spline'u czy podniesienia do kwadratu) dla `s-l` oraz `s-w` nie przynosiły żadnych konkretnych benefitów, trafnośc predykcji tylko spadała jak te klasyfikatory były zawarte
+
+```{r}
+#Trenujemy na zbiorze do trenowania (70%)
+model <- glm(class ~ poly(`s-l`,3)+`s-w`+I(`p-l`^2)+I(`p-w`^2), data=train, family=binomial)
+
+summary(model)
+```
+
+## Predykcja
+
+
+```{r}
+cv.glm(test,model,K=5)$delta->fit.cv
+dokladnosc=1-fit.cv[2]
+print(dokladnosc)
+```
+
+
+Dodanie do zbioru testowego kolumny zawierającej prawdopodobieństwo trafienia odpowiedniej klasy
+```{r}
+test$predicted <- predict(model, test, type="response")
+summary(test)
+
+print(test$predicted)
+
+```
+
+Podsumowanie: Byliśmy w stanie przewidzieć z 100% prawdopodobieństwem poprawność klas Iris-versicolor oraz Iris-virginica, natomiast dla trzeciej z klas (Iris-setosa) otrzymaliśmy bardzo słabe dopasowanie. Nie jestem pewien dlaczego nie byłem w stanie poprawnie przewidzieć również klasy "Setosa" lecz podejżewam że ma to związek z wybraną rodziną rozkładu.

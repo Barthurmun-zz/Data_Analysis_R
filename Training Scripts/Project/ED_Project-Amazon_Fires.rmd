@@ -1,0 +1,122 @@
+---
+title: "ED_Project-Amazon_Fires"
+author: "Jakub Bryl & Kamil Kryczka"
+date: "30 10 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(lubridate)
+require(brazilmaps)
+require(sf)
+require(maptools)
+source("functions.R")
+```
+
+
+## Data loading
+
+```{r}
+data <- read.csv("amazon.csv") %>% mutate(date=as.Date(date))
+```
+
+## Dividing Data Set 
+
+```{r}
+data_year <- aggregate(list(number_of_fires=data$number), by=list(sum_year=data$year), FUN=sum)
+
+data_state <- aggregate(list(number_of_fires=data$number), by=list(sum_state=data$state), FUN=sum)
+
+data_month <- aggregate(list(number_of_fires=data$number), by=list(sum_month=data$month), FUN=sum)
+data_month$sum_month <- factor(data_month$sum_month, levels = month.name)
+
+```
+
+
+
+## Bar Charts
+
+```{r}
+ggplot(data = data_year, aes(x=sum_year, y=number_of_fires)) + geom_bar(stat = "identity")
+
+ggplot(data = data_state, aes(x=sum_state, y=number_of_fires)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90))
+
+data_month %>% arrange(sum_month) %>% ggplot(data = . , aes(x=sum_month, y=number_of_fires)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90))
+
+```
+
+## Histogram
+
+```{r}
+ggplot(data = data, aes(x=number, fill=`month`)) + geom_histogram()
+```
+
+## Point Charts
+
+```{r}
+    
+ggplot(data = data_month, aes(x=sum_month, y=number_of_fires)) + geom_point() + geom_line()+ stat_smooth(method = 'lm') + theme(axis.text.x = element_text(angle = 90))
+
+ggplot(data = data_state, aes(x=sum_state, y=number_of_fires)) + geom_point() + geom_line()+ stat_smooth(method = 'lm') + theme(axis.text.x = element_text(angle = 90))
+
+ggplot(data = data_year, aes(x=sum_year, y=number_of_fires)) + geom_point() + geom_line()+ stat_smooth(method = 'lm')
+```
+
+## Linear Regression
+
+We can train our regression on the 70% of our data, and after that check if it was working on the rest.
+
+```{r}
+
+model <- lm(sum_year~number_of_fires, data=data_year)
+data_year$prediction = predict(model, newdata = data_year)
+
+plot(model)
+
+data_year$prediction
+```
+
+
+
+# Map visualisation
+
+# Overall number of fires
+```{r}
+# Create map of Brasil states
+states_map <- get_brmap(geo = "State",
+                     geo.filter = NULL,
+                     class = "sf") %>% arrange(nome)
+# Append column with data to be visualized
+states_map$number_of_fires <- data_state$number_of_fires
+# Plot the created map
+plot_custom_map(states_map)
+```
+
+# by month
+```{r}
+states_map <- get_brmap(geo = "State",
+                     geo.filter = NULL,
+                     class = "sf") %>% arrange(nome)
+monthly_data <- data[data$month=='March',]
+monthly_data_agg <- aggregate(list(number_of_fires=monthly_data$number), by=list(sum_state=monthly_data$state), FUN=sum)
+states_map$number_of_fires <- monthly_data_agg$number_of_fires
+plot_custom_map(states_map)
+```
+
+# by year
+```{r}
+states_map <- get_brmap(geo = "State",
+                     geo.filter = NULL,
+                     class = "sf") %>% arrange(nome)
+yearly_data <- data[data$year==2017,]
+yearly_data_agg <- aggregate(list(number_of_fires=yearly_data$number), by=list(sum_state=yearly_data$state), FUN=sum)
+states_map$number_of_fires <- yearly_data_agg$number_of_fires
+plot_custom_map(states_map)
+```

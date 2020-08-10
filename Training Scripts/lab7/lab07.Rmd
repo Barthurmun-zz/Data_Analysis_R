@@ -1,0 +1,109 @@
+---
+title: "lab07"
+author: "Jakub Bryl"
+date: "27 11 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+require(knitr)
+require(dplyr)
+require(ggplot2)
+require(dplyr)
+require(tidyverse)
+require(splines)
+```
+
+
+# Regresja Liniowa & Spline'y
+
+Uzyte dane:
+  - amazon.csv (dostarczone przed dr.Ruska)
+ 
+Kontynuję analizę tych danych ponieważ nie została skończona na zajęciach, oraz bardzo bym chciał się dowiedziećjak poprawnie podejść do zagadnienia przedstawionego i opisanego w pkt.3 ( przedstawiłem swój tok rozumowania i próbę dopasowania optymalnej f.regresji)
+
+# 1). Wczytanie Danych
+```{r}
+avocado <- read_csv("avocado.csv")
+colnames(avocado)[1] <- "Index"
+```
+
+# 2). Początek analizy LM 
+
+W tym kroku będę chciał zobaczyć wartości p-value dla wszystkich czynników, tak aby sprawdzić czy wybrane mają dostatecznie duży wpływ na Średnią kwotę Avocado. 
+Następnie przeanalizuję graficznie zależność od Daty oraz Typu avocado dopasowywując do wykresu regresję liniową (z zmienną kategoryczną 'typ')
+```{r}
+#Sprawdzenie p-value dla wszystkich czynników (czy jest dostatecznie niskie -> wplyw na średnią cenę)
+regr <- lm(AveragePrice~., avocado)
+summary(regr)
+
+# Dopasowanie LM do wykresu zależności Daty od Ceny z zmienną kategoryczną typu 
+# awocado (organiczny / zwykły) które mają znaczący wpływ na AvaragePrice 
+ggplot(avocado, aes(x=Date, y= AveragePrice, color=type)) +geom_line()+stat_smooth(method = 'lm')
+
+#Ponownie wykreślenie podsumowania dla dwóch parametrów które nakreśliliśmy (niskie p-val)
+regr_2 <- lm(AveragePrice ~ Date + type, avocado)
+summary(regr_2)
+```
+
+# 3). Spline'y oraz łamanie regresji liniowej
+
+W tym kroku zająłem się analizą zależności kolumny 4770 (nr. seryjny Awokado) od Średniej Ceny, jako iż ten wykres jest ciekawy i ciężki przez swój kształ. 
+Dzięki tej cesze będę w stanie przetestować i wybrać najlepszy sposób dopasowania regresji.
+```{r}
+# Prezentacja wykresu
+ggplot(avocado, aes(x = `4770`, y = AveragePrice)) + geom_point()
+
+# Próba dopasowania regresji liniowej
+ggplot(avocado, aes(x = `4770`, y = AveragePrice)) + geom_point() + stat_smooth(method = 'lm')
+
+```
+
+
+Jak widzimy regresja jest dopasowana źle, bardzo mocno opadająca, dany wykres prawdopodobnie wymaga dopasowania bardziej skomplikowanej funkcji.
+
+```{r}
+# Dopasowanie Base Spline'a z węzłem blisko wartości środkowej
+ggplot(avocado, aes(x = `4770`, y = AveragePrice)) + geom_point() +
+  stat_smooth(method = lm, formula = y~bs(x, knots = c(1e6)))
+
+# Powyższy wykres nie trafił kompletnie w zachowanie funckji, wniosek -> 
+# przesunięcie bliżej punktu dla którego występuje najwięcej wartości
+ggplot(avocado, aes(x = `4770`, y = AveragePrice)) + geom_point() +
+  stat_smooth(method = lm, formula = y~bs(x, knots = c(0.03e6)))
+
+# Wycięcie odstającego elementu w celu sprawdzenia jego wpływu na otrzymywane wyniki
+avocado_lastdrop <- filter(avocado, `4770` < max(`4770`))
+
+ggplot(avocado_lastdrop, aes(x = `4770`, y = AveragePrice)) + geom_point() + 
+  stat_smooth(method = lm, formula = y~bs(x, knots = c(0.03e6)))
+
+# Funkcja w końcowym przedziale zaczyna nam rosnąc, w celu wyeliminowania tego zjawiska konieczne jest 
+#zwiększenie wymiaru o jeden ( przekształcenie w funkcje opadającą)
+ggplot(avocado_lastdrop, aes(x = `4770`, y = AveragePrice)) + geom_point() + 
+  stat_smooth(method = lm, formula = y~bs(x, knots = c(0.03e6, 1e6)))
+
+# W celu przetestowania poprawności danych wykonam predykcje
+model_spline <- lm(AveragePrice ~ bs(`4770`, knots = c(0.05e6, 1e6)), avocado_lastdrop)
+# Dodanie wartosci przewidzianej z Spline'u do danych 
+avocado_lastdrop$predicted_spline <- predict(model_spline)
+# Wykres zależności (czy predykcja jest poprawna)
+ggplot(avocado_lastdrop, aes(x = AveragePrice, y = predicted_spline )) + geom_point()
+```
+
+Przy zastosowaniu Spline'ów nawet 2 stopnia nie otrzymaliśmy satysfakcjunujących wyników, dlatego postanowiłem zamiast spline'u spróbować zagiąć funkcję regresji w odpowiednim miejscu (węźle), przesunąć węzeł jeszcze bliżej skupiska danych a następnie przedstawić porównanie przewidzianych wartości
+
+```{r}
+# "Łamanie" funkcji regresji przy wartości X ~ 0.01e6
+ggplot(avocado_lastdrop, aes(x= `4770`, y= AveragePrice)) +geom_point()+ 
+  stat_smooth(method = 'lm', formula = y ~ x + I(x-0.01e6):I(x>0.01e6))
+
+model <- lm(AveragePrice ~ `4770` + I(`4770`-0.01e6):I(`4770`>0.01e6), avocado_lastdrop) 
+
+avocado_lastdrop$predicted <- predict(model)
+
+ggplot(avocado_lastdrop, aes(x = AveragePrice, y = predicted )) + geom_point()
+
+```
+
+Wydaje mi się iż tak dopasowana funkcja regresji jest bardziej poprawna niż za pomocą splajn'ów oraz przewidziane wartości są trafniejsze ( brakuje mi pomysłu jak sprawić aby w końcowym etapie funkcja była bardziej zakrzywiona "w dół ). Niestety brakuje mi na tyle wiedzy i obeznania w tym temacie aby móc to stwierdzić na 100%, z tego powodu bardzo bym prosił o opinię czy moje rozumowanie oraz podejście do analizy jest poprawne.

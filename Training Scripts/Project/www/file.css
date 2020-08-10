@@ -1,0 +1,33 @@
+html,body{
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* overriding bootstrap */
+.container-fluid,
+.navbar{
+    width: 100%;
+    padding: 0 !important;
+    margin:0 !important;
+}
+
+/* layout css */
+.landing-wrapper {}
+
+<style>
+.landing-wrapper .landing-block{
+    background-image: url(www/brazil.png);
+	background-attachment: scroll;
+	padding: 20px;
+}
+
+.landing-wrapper .background-content{
+    background: white;
+	padding: 20px;
+	color: #fff;
+	text-align: center;
+	font-size: 26px;
+	opacity: 0.6;
+}
+</style>

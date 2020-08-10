@@ -1,0 +1,95 @@
+---
+title: "Wizualizacja"
+author: "Jakub Bryl"
+date: "23 10 2019"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(ggplot2)
+require(dplyr)
+require(readr)
+
+```
+
+# Wczytanie
+
+```{r}
+data <- read_csv("https://docs.google.com/spreadsheets/d/1T4LPf7HBKlVLtV_vpMfBkU6XJmhNyLqUAl8Al5kaX8o/pub?gid=507212225&single=true&output=csv") %>%
+  mutate(Data.tankowania=as.Date(Data.tankowania))
+print(data$Data.tankowania)
+```
+
+
+## Operacje na zbiorach danych
+
+##Histogram:
+
+data = ->Tutaj przypisujemy zbior danych
+aes() -> Okresla co ma byc na x'ie czyli od czego rysujemy hist
+geom_ -> Okresla krztalt
+fill = -> Powie nam po czym kategoryzowac, np u nas do pelna okreslalo czy to bylo tankowanie do pelna czy nie
+```{r}
+
+ggplot(data = data, aes(x=Cena.tankowania, fill=`Do.pełna`)) + geom_histogram()
+```
+
+##Przebieg liniowy:
+
+geom_line -> Łączy punkty wykresu liniowego
+stat_smooth(method = 'lm') -> wyrównuje i dopasowywuje regresje liniową
+```{r}
+ggplot(data = data, aes(x=Data.tankowania, y = Licznik, color=`Do.pełna`)) + geom_point() + geom_line()
+
+ggplot(data = data, aes(x=Data.tankowania, y = Licznik)) + geom_point() + geom_line() + stat_smooth(method = 'lm')
+
+```
+
+##Spalanie:
+
+cumsum() -> Suma danych wartości podanych jako elementy funkcji, więc dla każdej pary elementów dana Suma rośnie (z każdą iteracją)
+data = . -> Jest to odwołanie do wartości przekazywanej (zbioru) wcześniej czyli u nas tego co wychodzi po całym łańcuszku %>%
+arrange() -> Sortowanie/Uporzątkowanie wartości rosnąco na podstawie wartości przekazanej do funkcji.
+
+```{r}
+data %>% arrange(Data.tankowania) %>% mutate(paliwo = cumsum(Cena.tankowania/Cena.jednostkowa)) %>%
+ggplot(data = . , aes(x=Licznik, y = paliwo)) + geom_point() + geom_line() + stat_smooth(method = 'lm')
+
+data %>% arrange(Data.tankowania) %>% mutate(paliwo = cumsum(Cena.tankowania/Cena.jednostkowa)) %>%
+ggplot(data = . , aes(x=Licznik, y = paliwo, color = Cena.jednostkowa)) + geom_point() + geom_line() + stat_smooth(method = 'lm')
+
+```
+
+
+##BoxPlote:
+
+```{r}
+ggplot(data = data , aes(x=`Do.pełna`, y = Cena.jednostkowa)) + geom_boxplot()
+
+```
+
+
+##LM:
+
+mutate -> Creates new variables.
+
+```{r}
+data %>% arrange(Data.tankowania) %>% mutate(paliwo=cumsum(Cena.tankowania/Cena.jednostkowa)) %>% mutate(licznik100=Licznik/100) -> data.100
+
+model <- lm(paliwo~licznik100, data=data.100)
+data.100$prediction = predict(model, newdata = data.100)
+plot(model)
+```
+
+Reszta (epsilon)
+
+```{r}
+data.100  %>% mutate(r=paliwo-prediction) 
+```
+
+

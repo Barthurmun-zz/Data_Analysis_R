@@ -1,0 +1,176 @@
+---
+title: "PCA"
+author: "Jakub Bryl"
+date: "15 01 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(MASS)
+require(knitr)
+require(dplyr)
+require(readr)
+require(reshape)
+```
+
+```{r}
+kable(head(USArrests))
+```
+
+```{r}
+pca.out = prcomp(USArrests, scale = TRUE)
+print(pca.out)
+```
+
+Jedna os - jeden komponent
+Druga os - drugi komponent
+```{r}
+biplot(pca.out, scale = 0)
+```
+
+```{r}
+summary(pca.out)
+```
+
+
+
+
+# Teraz lecimy na danych z Avocado
+```{r}
+data <- read_csv("avocado.csv")
+data <- subset(data, select=-c(X1,Date,type,region,year,`XLarge Bags`,`4046`,`4225`,`4770`,`Small Bags`,`Large Bags`))
+summary(data)
+```
+
+```{r}
+pca.out = prcomp(data, scale = TRUE)
+print(pca.out)
+```
+
+```{r}
+biplot(pca.out, scale = 0)
+```
+```{r}
+summary(pca.out)
+```
+
+
+
+
+# Klasteryzacja
+```{r}
+rm(list=ls())
+data <- read.table("../../../s.txt")
+colnames(data) <- c("PacketLen")
+```
+
+```{r}
+k2 <- kmeans(data$PacketLen,2)
+data$n.1 <- with(k2, centers[cluster])
+data$c <- k2$cluster
+
+
+```
+```{r}
+sapply(data,mean)
+
+```
+
+```{r}
+sapply(data,sd)
+```
+
+```{r}
+ggplot(data, aes(x=PacketLen, fill=as.factor(c))) + geom_histogram()
+```
+
+Widzimy ze jeden jumboframe zabil nam wszystko dlatego trzeba go usunac
+```{r}
+data2 <- read.table("../../../s.txt")
+colnames(data2) <- c("PacketLen")
+data2 %>% filter(PacketLen < 2000) -> data2
+```
+
+```{r}
+k2_2 <- kmeans(data2$PacketLen,2)
+data2$n.1 <- with(k2_2, centers[cluster])
+data2$c <- k2_2$cluster
+
+
+```
+```{r}
+sapply(data2,mean)
+```
+
+```{r}
+sapply(data2,sd)
+```
+
+```{r}
+ggplot(data2, aes(x=PacketLen, fill=as.factor(c))) + geom_histogram()
+```
+
+
+
+# Klasteryzacja Hierarchiczna
+```{r}
+x <- sample_n(data2,1000)
+clusters <- hclust(dist(x), method='complete')
+plot(clusters, cex=0.7)
+```
+
+
+
+# Zadanie: zrobic z tych danych macierz 20xY 
+```{r}
+data <- read.table("../../../s.txt")
+colnames(data) <- c("PacketLen")
+
+d <- matrix(data$PacketLen, ncol = 20, byrow = TRUE)
+```
+
+
+```{r}
+pca.out = prcomp(d, scale = TRUE)
+print(pca.out)
+```
+
+Jedna os - jeden komponent
+Druga os - drugi komponent
+```{r}
+biplot(pca.out, scale = 0)
+```
+
+```{r}
+summary(pca.out)
+```
+
+
+
+```{r}
+data <- read.table("../../../s.txt")
+colnames(data) <- c("PacketLen")
+
+d <- matrix(data$PacketLen, ncol = 50, byrow = TRUE)
+```
+
+
+```{r}
+pca.out = prcomp(d, scale = TRUE)
+print(pca.out)
+```
+```{r}
+biplot(pca.out, scale = 0)
+```
+
+```{r}
+acf(data$PacketLen, lag.max = 1000)
+```
+
+```{r}
+summary(pca.out)
+```
+
+Dane przedstawione nie daly duzej ilosci informacji ze wzgledu iz kazda z zmiennych mocno wplywa, jak widzimy z wykresu autokorelacji nawet do 1000 pakietow wplywaja one na wynik.

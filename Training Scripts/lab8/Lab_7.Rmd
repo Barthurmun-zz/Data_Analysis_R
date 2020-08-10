@@ -1,0 +1,108 @@
+---
+title: "Regresja logistyczna"
+author: "Krzysztof Rusek"
+date: "Tue Dec 03 17:45:32 2019"
+output:
+  ioslides_presentation: default
+  beamer_presentation:
+    fig_height: 4
+    fig_width: 6
+    theme: Warsaw
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+require(ggplot2)
+require(MASS)
+require(boot)
+require(splines)
+require(png)
+require(readr)
+#install.packages("png")
+```
+
+
+# Regresja logistyczna
+
+Model skóry
+
+## Ladowanie danych
+
+Ładowanie unormowanych danych RGB pixeli.
+"s" to skora, "b" tlo
+```{r}
+data <- read_csv("pixels.csv", col_types = cols(klasa = col_factor(levels = c("b", 
+    "s"))))
+```
+
+Zobaczmy histogram
+
+```{r}
+ggplot(data = data, aes(x=r, fill= klasa)) + geom_histogram()
+ggplot(data = data, aes(x=b, fill= klasa)) + geom_histogram(position = "stack")
+ggplot(data = data, aes(x=g, fill= klasa)) + geom_histogram(position = "stack")
+```
+
+ i boxplot
+ 
+```{r}
+ggplot(data = data, aes(x=klasa, y=r)) + geom_boxplot()
+```
+Skóra zawiero dużo składowych czerwonych.
+
+## model
+
+Trenujemy klasyfikator. Jeżeli model jest mało dokladny, dodajemy czynniki nieliniowe oraz interakcje.
+
+```{r}
+model <- glm(klasa ~ poly(r,2)+poly(g,2)*r+bs(r, knots = c(0.35)), data=data, family=binomial)
+summary(model)
+```
+
+fragment wyzlicza skutecznosc
+
+```{r}
+cv.glm(data,model,K=5)$delta->fit.cv
+dokladnosc=1-fit.cv[2]
+print(dokladnosc)
+```
+
+# predykcja
+
+```{r}
+flatten<-function(x)
+{
+  d<-dim(x)
+  d[1]<-d[1]*d[2]
+  d<-d[-2]
+  dim(x)<-d
+  if(d[2]==3)
+  {
+    colnames(x)<- c('r','g','b')
+  }
+  else
+  {
+    colnames(x)<- c('r','g','b','a')
+  }
+  
+  as.data.frame(x)
+}
+
+readPNG("Scarlett.png")  ->ref
+d<-dim(ref)
+
+predict(model,flatten(ref),type="response")->prob.ref
+dim(prob.ref)<-d[-3]
+image(prob.ref, axes = FALSE, col = grey(seq(0, 1, length = 256)),useRaster=T)
+writePNG(prob.ref,"gray.png")
+
+```
+
+# Todo
+
+Model wykrywa czerwona sukienke jako skórę, zbudowac model zneiliniowymi predyktorami
+
+# Playground tensorflow
+
+http://playground.tensorflow.org/

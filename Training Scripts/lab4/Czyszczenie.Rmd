@@ -1,0 +1,79 @@
+---
+title: "Lab.4 - Odpowiednie Przygotowanie Danych"
+author: "Jakub Bryl"
+date: "11 11 2019"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+## Przygotowanie bibliotek 
+
+```{r}
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(tidyr)
+require(stats)
+require(stringr)
+```
+
+## Zadanie 1: Proszę wczutać plik pomiaryZapylenia.txt oraz doprowadzić do otrzymania poprawnego technicznie zbioru danych.
+
+```{r}
+
+dane <- read.csv(file="pomiaryZapylenia.txt", header = F)
+summary(dane)
+
+#Tutaj przy Col_names = c() podajemy nowe nazwy kolumn, a przy col_types podajemy typ zmiennych kazdej z kolumn, odpowiednio c = character n = numeric
+dane <- read_csv(file="pomiaryZapylenia.txt", col_names =  c("Miejsce", "Zapylenie"), col_types = "cn")
+summary(dane)
+
+```
+
+## Zadanie 2: Oczyszczenie danych i przerobienie na dany typu Tidy
+
+```{r}
+
+
+data <- read_csv(file = "IRCCyN_IVC_1080i_Database_Score.csv", skip = 1)
+
+#Zczytujemy tylko do 41 kolumny
+data_2 <- data[,1:41]
+#Grupujemy dane po kolumnie tester od kolumny ocena z wyłączeniem kolumn X1 oraz X2
+data_2 <- data_2 %>% gather( key = "Tester", value = "Ocena", -X1, -X2)
+#Zmiany kosmetyczne odnosnie nazewnictwa kolumny X1 oraz X2, dodatkowo czyscimy z typu NA
+colnames(data_2)[2] <- "Zrodlo"
+data_2$X1[is.na(data_2$X1)] = 0
+data_2$X1[data_2$X1 > 0] = 1
+colnames(data_2)[1] <- "Brak Kompresji"
+
+#Inicjalizacja nowych kolumn
+data_2$`Zlozonosc Kompresji` = 0
+data_2$`Typ` = 0
+
+for (y in seq(1, length(data_2$Zrodlo))){
+  #Wyciagamy wspolczynnik kompresji z danego wiersza i dodajemy go do odpowiedniej kolumny
+  data_2$`Zlozonosc Kompresji`[y] <- stringr::str_extract(data_2$Zrodlo[y], "\\d*M")
+  #Wyciagamy typ filmu(jego rozszerzenie).
+  data_2$Typ[y] <- stringr::str_extract(data_2$Zrodlo[y], "\\.(\\w{3})")
+  data_2$Typ[y] <- unlist(strsplit(data_2$Zrodlo[y], "\\."))[2]
+  
+  #Oczyszczamy kolumne zrodlo w wartosci ktore juz wczesniej wyciagnelismy i 
+  #uporzadkolismy w dedykowanych kolumnach - usuwanie redundantnych informacji
+  if (data_2$`Brak Kompresji`[y] == 1) {
+    data_2$`Zlozonosc Kompresji`[y] = 0
+    data_2$Zrodlo[y] <- unlist(strsplit(data_2$Zrodlo[y], "\\."))[1]
+  } else {
+      data_2$Zrodlo[y] <- unlist(strsplit(data_2$Zrodlo[y], ".\\d*M"))[1]
+  }
+}
+
+summary(data_2)
+
+show(data_2)
+
+```
+
+
