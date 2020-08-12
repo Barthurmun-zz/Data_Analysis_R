@@ -1,0 +1,55 @@
+---
+title: "Scen_1&2"
+author: "Jakub Bryl"
+date: "31 05 2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(lubridate)
+require(brazilmaps)
+require(sf)
+require(maptools)
+require(ggpubr)
+require(readr)
+require(tidyverse)
+```
+
+
+# Wczytanie pcap'a przeportowanego na plike csv
+```{r}
+rm(list = ls())
+
+
+data_tp_ns3_n3mn <- read.csv(file="Scen2_TP.csv", col.names = 
+                   c("Interval start","Throughput"))
+```
+
+
+
+#Wykres szybkosci transmisji
+```{r}
+#Common
+theme_set(theme_bw())
+
+plot1_ns3 <- ggplot(data=data_tp_ns3_n3mn, aes(x=Interval.start, y=Throughput)) + geom_line(color="red") + geom_point(color="purple") +labs(x = "Czas [s]", y = "Szybkość transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Szybkości transmisji w scen. 2") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))
+
+plot1_ns3
+```
+
+```{r}
+summary(data_tp_ns3_n3mn)
+```
+
+```{r}
+plot1_ns3 + stat_smooth(method = "lm", col = "green")
+```
+
+

@@ -1,0 +1,97 @@
+---
+title: "Scen_3"
+author: "Jakub Bryl"
+date: "31 05 2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(lubridate)
+require(brazilmaps)
+require(sf)
+require(maptools)
+require(ggpubr)
+require(readr)
+require(tidyverse)
+```
+
+
+# Wczytanie pcap'a przeportowanego na plike csv
+```{r}
+rm(list = ls())
+
+
+data_tp_ns3_n3mn <- read.csv(file="Scen3_TP.csv", col.names = 
+                   c("Interval start","Wideo 1 NS3","Glos NS3","BE NS3", "BE NS3-Mininet","Glos NS3-Mininet","Wideo 1 NS3-Mininet"))
+gathered_data_tp_ns3_n3mn <- gather(data_tp_ns3_n3mn, key="Category", "Throughput", 2:7)
+
+```
+
+
+
+#Wykres szybko
+```{r}
+#Common
+theme_set(theme_bw())
+
+
+plot1_ns3 <- ggplot(data=gathered_data_tp_ns3_n3mn, aes(x=Interval.start, y=Throughput)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category)) +labs(x = "Czas [s]", y = "Szybkość transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Szybkości transmisji w scen. 3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
+  scale_color_discrete(name="Typy danych:") +guides(colour = guide_legend(override.aes = list(size=1)))
+
+plot1_ns3
+```
+
+```{r}
+summary(data_tp_ns3_n3mn)
+```
+
+#Wykres Delay oraz Jitter w funkcji czasu bez uśrednienia per sekunda, czyli dane są per pakiet (z dopasowaną regresją linioną na wykresie)
+```{r}
+rm(list = ls())
+
+
+data <- read.csv(file="test_tp_NS3.csv", col.names = 
+                   c("Time","Video NS3","BE NS3","Voice NS3"))
+
+gathered_data <- gather(data, key="Category", "Throughput", 2:4)
+
+#Common
+theme_set(theme_bw())
+
+
+plot1_ns3 <- ggplot(data=gathered_data, aes(x=Time, y=Throughput, group=Category)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category, shape=Category)) +labs(x = "Czas [s]", y = "Przepustowość [b/s]") + theme(axis.title.x = element_text(color = "black", size = 14), axis.title.y = element_text(color = "black", size = 14)) + ggtitle("Przepustowość dla scen.2 w NS-3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
+  scale_color_discrete(name="Typy danych:") +guides(colour = guide_legend(override.aes = list(size=1)))
+
+
+
+plot1_ns3
+```
+
+#Wykres Delay oraz Jitter w funkcji czasu bez uśrednienia per sekunda, czyli dane są per pakiet (z dopasowaną regresją linioną na wykresie)
+```{r}
+rm(list = ls())
+
+
+data <- read.csv(file="test_delay_NS3.csv", col.names = 
+                   c("Time","Delay"))
+data$Delay <- data$Delay*1000
+
+#Common
+theme_set(theme_bw())
+
+
+plot1_ns3 <- ggplot(data=data, aes(x=Time, y=Delay)) + geom_line(color="chocolate") + geom_point(color="firebrick") +labs(x = "Czas [s]", y = "VG(udp.time_delta) [ms]") + theme(axis.title.x = element_text(color = "black", size = 14), axis.title.y = element_text(color = "black", size = 10)) + ggtitle("Przykładowe średnie opóźnienie pakietów") + theme(legend.title = element_text(colour="chocolate", size=14, face="bold"))+ guides(colour = guide_legend(override.aes = list(size=1)))
+
+
+
+plot1_ns3
+```
+
+

@@ -1,0 +1,323 @@
+---
+title: "Scen_3"
+author: "Jakub Bryl"
+date: "31 05 2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(lubridate)
+require(brazilmaps)
+require(sf)
+require(maptools)
+require(ggpubr)
+library(ggpubr)
+library(patchwork)
+```
+
+
+# Wczytanie pcap'a przeportowanego na plike csv
+```{r}
+rm(list = ls())
+data_ns3mn <- read.csv(file="Scen3NS3MN_RTT.csv", col.names = 
+                   c("No.", "Time", "Source", "Destination", "Protocol", 
+                     "Lenght", "Delay_TCP", "Delay_UDP","Priority", "ACK RTT","Source Port", "Destination Port","Info"))
+
+data_ns3 <- read.csv(file="Scen3NS3_RTT.csv", col.names = 
+                   c("No.", "Time", "Source", "Destination", "Protocol", 
+                     "Lenght", "Delay_TCP", "Delay_UDP","Priority", "ACK RTT","Source Port", "Destination Port","Info"))
+
+
+data_ns3mn <- filter(data_ns3mn, ACK.RTT > 0, Time > 3)
+data_ns3mn$ACK.RTT <- data_ns3mn$ACK.RTT*1000
+
+data_ns3 <- filter(data_ns3, ACK.RTT > 0, Time > 1)
+data_ns3$ACK.RTT <- data_ns3$ACK.RTT*1000
+
+```
+
+
+# Przygotowanie kolumny pod Jitter
+```{r}
+
+data_ns3mn$`Jitter` = 0
+data_ns3$`Jitter` = 0
+
+```
+
+
+# Obliczanie Jitter'u jako bezwzględna różnica opóźnienia aktualnego pakietu od poprzedniego 
+```{r}
+#NS3
+for (y in seq(1, length(data_ns3$`No.`))){
+  if (y == 1){
+    data_ns3$`Jitter`[y] = abs(data_ns3$ACK.RTT[y]-0);
+  }
+  else{
+  data_ns3$`Jitter`[y] = abs(data_ns3$ACK.RTT[y+1]-data_ns3$ACK.RTT[y]);
+  }
+}
+
+data2_ns3 <- data_ns3 %>% mutate(Time=as.integer(Time)) 
+sim_time_sec <- c()
+
+for (y in data2_ns3$`Time`){
+  if (any(sim_time_sec==y)){
+    next
+  }
+  else {
+    sim_time_sec <- append(sim_time_sec,y) 
+  }
+}
+
+data3_ns3 <- matrix(,nrow = length(sim_time_sec), ncol=3, byrow=TRUE)
+data3_ns3<-as.data.frame(data3_ns3)
+colnames(data3_ns3)<-c("Time","ACK RTT","Jitter")
+data3_ns3$Time <- sim_time_sec
+
+#NS3-Mininet
+for (y in seq(1, length(data_ns3mn$`No.`))){
+  if (y == 1){
+    data_ns3mn$`Jitter`[y] = abs(data_ns3mn$ACK.RTT[y]-0);
+  }
+  else{
+  data_ns3mn$`Jitter`[y] = abs(data_ns3mn$ACK.RTT[y+1]-data_ns3mn$ACK.RTT[y]);
+  }
+}
+
+data2_ns3mn <- data_ns3mn %>% mutate(Time=as.integer(Time)) 
+sim_time_sec <- c()
+
+for (y in data2_ns3mn$`Time`){
+  if (any(sim_time_sec==y)){
+    next
+  }
+  else {
+    sim_time_sec <- append(sim_time_sec,y) 
+  }
+}
+
+data3_ns3mn <- matrix(,nrow = length(sim_time_sec), ncol=3, byrow=TRUE)
+data3_ns3mn<-as.data.frame(data3_ns3mn)
+colnames(data3_ns3mn)<-c("Time","ACK RTT","Jitter")
+data3_ns3mn$Time <- sim_time_sec
+
+```
+
+# Przekształcenie tabeli do postaci obrazującej zachowanie (Delay,Jitter) per sekunda symulacji, a nie tak jak to było wcześniej per pakiet, czyli otrzymujemy dane dla każdej sekundy symulacji a podana wartość Delay'u oraz Jitter'u są wartościami średnimi
+```{r}
+#NS3
+for (x in seq(1, length(data3_ns3$`Time`))){
+  num_packets <- 0
+  sum_delay <- 0
+  sum_jitter <- 0
+  for (y in seq(1, length(data2_ns3$`No.`))){
+    if (data2_ns3$Time[y]==data3_ns3$Time[x]){
+      num_packets <- num_packets+1
+      sum_delay <- sum_delay + data2_ns3$ACK.RTT[y]
+      sum_jitter <- sum_jitter + data2_ns3$Jitter[y]
+      #sum_tp <- sum_tp + data2$Lenght
+      
+      #data3$`TP`[x] <- (sum_tp * 8) / 1000000
+      data3_ns3$`ACK RTT`[x] <- sum_delay/num_packets
+      data3_ns3$`Jitter`[x] <- sum_jitter/num_packets
+    }
+    else {
+      next
+    }
+  }
+}
+
+#NS3-Mininet
+for (x in seq(1, length(data3_ns3mn$`Time`))){
+  num_packets <- 0
+  sum_delay <- 0
+  sum_jitter <- 0
+  for (y in seq(1, length(data2_ns3mn$`No.`))){
+    if (data2_ns3mn$Time[y]==data3_ns3mn$Time[x]){
+      num_packets <- num_packets+1
+      sum_delay <- sum_delay + data2_ns3mn$ACK.RTT[y]
+      sum_jitter <- sum_jitter + data2_ns3mn$Jitter[y]
+      #sum_tp <- sum_tp + data2$Lenght
+      
+      #data3$`TP`[x] <- (sum_tp * 8) / 1000000
+      data3_ns3mn$`ACK RTT`[x] <- sum_delay/num_packets
+      data3_ns3mn$`Jitter`[x] <- sum_jitter/num_packets
+    }
+    else {
+      next
+    }
+  }
+}
+```
+
+#Wykres Delay oraz Jitter w funkcji czasu bez uśrednienia per sekunda, czyli dane są per pakiet (z dopasowaną regresją linioną na wykresie)
+```{r}
+#NS3
+theme_set(theme_bw())
+
+#data_ns3 <- filter(data_ns3, ACK.RTT < 7.5)
+lot1_ns3 <- ggplot(data=data_ns3, aes(x=Time, y=ACK.RTT)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "RTT [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Wideo 1 RTT NS-3")+theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+
+#plot1_ns3 <- ggplot(data=data_ns3, aes(x=Time, y=ACK.RTT)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "RTT [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Opóźnienie NS3")
+
+plot2_ns3 <- ggplot(data=data_ns3, aes(x=Time, y=Jitter)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "Jitter [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Wideo 1 jitter NS3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+p
+
+plot1_ns3
+plot2_ns3
+```
+
+```{r}
+#NS3-Mininet
+theme_set(theme_bw())
+
+
+plot1_ns3mn <- ggplot(data=data_ns3mn, aes(x=Time, y=ACK.RTT)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "RTT [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Wideo 1 RTT NS3-MN")+theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot2_ns3mn <- ggplot(data=data_ns3mn, aes(x=Time, y=Jitter)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "Jitter [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Wideo 1 jitter NS3-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot1_ns3mn
+plot2_ns3mn
+```
+
+
+#Wykres Delay oraz Jitter w funkcji czasu z uśrednieniem per sekunda (z dopasowaną regresją linioną na wykresie)
+```{r}
+#NS3
+plot3_ns3 <- ggplot(data=data3_ns3, aes(x=Time, y=`ACK RTT`)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "RTT [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Uśrednione opóźnienie wideo 1 NS3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot4_ns3 <- ggplot(data=data3_ns3, aes(x=Time, y=Jitter)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "Jitter [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Uśredniony jitter wideo 1 NS3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot3_ns3
+plot4_ns3
+
+```
+
+```{r}
+#NS3-Mininet
+plot3_ns3mn <- ggplot(data=data3_ns3mn, aes(x=Time, y=`ACK RTT`)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "RTT [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Uśrednione opóźnienie wideo 1 NS3-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot4_ns3mn <- ggplot(data=data3_ns3mn, aes(x=Time, y=Jitter)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "Jitter [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Uśredniony jitter wideo 1 NS3-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot3_ns3mn
+plot4_ns3mn
+```
+
+
+```{r}
+
+#NS3
+data_fin_ns3 <- data_ns3[, !(colnames(data_ns3) %in% c("Info","Delay_UDP","Delay_TCP","Lenght","Source.Port", "Destination.Port","New.Column","Source","No.", "Priority", "Protocol", "Destination", "Time"))]
+
+#NS3-Mininet
+data_fin_ns3mn <- data_ns3mn[, !(colnames(data_ns3mn) %in% c("Info","Delay_UDP","Delay_TCP","Lenght","Source.Port", "Destination.Port","New.Column","Source","No.", "Priority", "Protocol", "Destination", "Time"))]
+
+summary_ns3 <- summary(data_fin_ns3)
+summary_ns3mn <- summary(data_fin_ns3mn)
+
+print("NS3 Video Steam Summary:")
+summary_ns3
+
+print("NS3-Mininet Video Stream Summary:")
+summary_ns3mn
+
+
+```
+
+
+
+```{r}
+(plot1_ns3 + plot1_ns3mn) / (plot2_ns3 + plot2_ns3mn)
+```
+
+```{r}
+(plot3_ns3 + plot3_ns3mn) / (plot4_ns3 + plot4_ns3mn)
+```
+
+
+
+# Analiza modelu CBR w NS3-MN
+```{r}
+rm(list = ls())
+data_ns3mn_cbr <- read.csv(file="Scen3NS3MN_RTT_CBR.csv", col.names = 
+                   c("No.", "Time", "Source", "Destination", "Protocol", 
+                     "Lenght", "Delay_TCP", "Delay_UDP","Priority", "ACK RTT","Source Port", "Destination Port","Info"))
+
+
+data_ns3mn_cbr <- filter(data_ns3mn_cbr, ACK.RTT > 0, Time > 3)
+data_ns3mn_cbr$ACK.RTT <- data_ns3mn_cbr$ACK.RTT*1000
+
+data_ns3mn_cbr$`Jitter` = 0
+
+
+for (y in seq(1, length(data_ns3mn_cbr$`No.`))){
+  if (y == 1){
+    data_ns3mn_cbr$`Jitter`[y] = abs(data_ns3mn_cbr$ACK.RTT[y]-0);
+  }
+  else{
+  data_ns3mn_cbr$`Jitter`[y] = abs(data_ns3mn_cbr$ACK.RTT[y+1]-data_ns3mn_cbr$ACK.RTT[y]);
+  }
+}
+
+data2_ns3mn_cbr <- data_ns3mn_cbr %>% mutate(Time=as.integer(Time)) 
+sim_time_sec <- c()
+
+for (y in data2_ns3mn_cbr$`Time`){
+  if (any(sim_time_sec==y)){
+    next
+  }
+  else {
+    sim_time_sec <- append(sim_time_sec,y) 
+  }
+}
+
+data3_ns3mn_cbr <- matrix(,nrow = length(sim_time_sec), ncol=3, byrow=TRUE)
+data3_ns3mn_cbr<-as.data.frame(data3_ns3mn_cbr)
+colnames(data3_ns3mn_cbr)<-c("Time","ACK RTT","Jitter")
+data3_ns3mn_cbr$Time <- sim_time_sec
+
+
+for (x in seq(1, length(data3_ns3mn_cbr$`Time`))){
+  num_packets <- 0
+  sum_delay <- 0
+  sum_jitter <- 0
+  for (y in seq(1, length(data2_ns3mn_cbr$`No.`))){
+    if (data2_ns3mn_cbr$Time[y]==data3_ns3mn_cbr$Time[x]){
+      num_packets <- num_packets+1
+      sum_delay <- sum_delay + data2_ns3mn_cbr$ACK.RTT[y]
+      sum_jitter <- sum_jitter + data2_ns3mn_cbr$Jitter[y]
+      #sum_tp <- sum_tp + data2$Lenght
+      
+      #data3$`TP`[x] <- (sum_tp * 8) / 1000000
+      data3_ns3mn_cbr$`ACK RTT`[x] <- sum_delay/num_packets
+      data3_ns3mn_cbr$`Jitter`[x] <- sum_jitter/num_packets
+    }
+    else {
+      next
+    }
+  }
+}
+```
+
+
+```{r}
+#NS3-Mininet
+theme_set(theme_bw())
+
+
+plot1_ns3mn_cbr <- ggplot(data=data_ns3mn_cbr, aes(x=Time, y=ACK.RTT)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "RTT [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Wideo 1(CBR) RTT NS3-MN")+theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot2_ns3mn_cbr <- ggplot(data=data_ns3mn_cbr, aes(x=Time, y=Jitter)) + geom_line(color="darkseagreen")+geom_point(color="firebrick") + labs(x = "Czas [s]", y = "Jitter [ms]") + theme(axis.title.x = element_text(color = "black", size = 12, vjust = 0.35), axis.title.y = element_text(color = "black", size = 12, vjust = 0.35)) + ggtitle("Wideo 1(CBR) jitter NS3-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12))
+
+plot1_ns3mn_cbr
+plot2_ns3mn_cbr
+```
