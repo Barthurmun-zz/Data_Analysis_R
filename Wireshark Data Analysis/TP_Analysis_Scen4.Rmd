@@ -1,0 +1,83 @@
+---
+title: "Scen_3"
+author: "Jakub Bryl"
+date: "31 05 2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(lubridate)
+require(brazilmaps)
+require(sf)
+require(maptools)
+require(ggpubr)
+require(readr)
+require(tidyverse)
+```
+
+
+# Wczytanie pcap'a przeportowanego na plike csv
+```{r}
+rm(list = ls())
+
+
+data_tp_ns3_n3mn <- read.csv(file="Scen4_TP.csv", col.names = 
+                   c("Interval start","Wideo 1 NS3","Glos NS3","BE NS3", "BE NS3-Mininet","Glos NS3-Mininet","Wideo 1 NS3-Mininet","Wideo 2 NS3","Wideo 2 NS3-Mininet"))
+gathered_data_tp_ns3_n3mn <- gather(data_tp_ns3_n3mn, key="Category", "Throughput", 2:9)
+
+```
+
+
+
+#Wykres sumaryczny
+```{r}
+#Common
+theme_set(theme_bw())
+
+
+plot1_ns3 <- ggplot(data=gathered_data_tp_ns3_n3mn, aes(x=Interval.start, y=Throughput)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category)) +labs(x = "Czas [s]", y = "Szybkość transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Szybkości transmisji w scen. 4") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
+  scale_color_discrete(name="Typy danych:") +guides(colour = guide_legend(override.aes = list(size=1)))
+
+plot1_ns3
+```
+
+```{r}
+summary(data_tp_ns3_n3mn)
+```
+
+
+
+
+# Analiza TP wideo 1 
+```{r}
+rm(list = ls())
+
+
+data_tp_ns3 <- read.csv(file="Scen4_TP_VI1_NS3.csv", col.names = 
+                   c("Interval start","Throughput"))
+
+data_tp_n3mn <- read.csv(file="Scen4_TP_VI1_NS3MN.csv", col.names = 
+                   c("Interval start","Throughput"))
+```
+
+
+
+#Wykres szybkosci transmisji
+```{r}
+#Common
+theme_set(theme_bw())
+
+plot1_ns3 <- ggplot(data=data_tp_ns3, aes(x=Interval.start, y=Throughput)) + geom_line(color="red") + geom_point(color="purple") +labs(x = "Czas [s]", y = "Szybkość transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Wykres przeplywnosci wideo 1 NS-3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))
+
+plot1_ns3mn <- ggplot(data=data_tp_n3mn, aes(x=Interval.start, y=Throughput)) + geom_line(color="red") + geom_point(color="purple") +labs(x = "Czas [s]", y = "Szybkość transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Wykres przeplywnosci wideo 1 NS3-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))
+
+plot1_ns3
+plot1_ns3mn
+```

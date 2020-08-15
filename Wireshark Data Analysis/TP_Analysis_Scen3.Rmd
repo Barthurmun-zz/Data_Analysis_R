@@ -36,7 +36,7 @@ gathered_data_tp_ns3_n3mn <- gather(data_tp_ns3_n3mn, key="Category", "Throughpu
 
 
 
-#Wykres szybko
+#Wykres sumaryczny
 ```{r}
 #Common
 theme_set(theme_bw())
@@ -52,13 +52,17 @@ plot1_ns3
 summary(data_tp_ns3_n3mn)
 ```
 
-#Wykres Delay oraz Jitter w funkcji czasu bez uśrednienia per sekunda, czyli dane są per pakiet (z dopasowaną regresją linioną na wykresie)
+
+
+
+
+#Sekcja dodatkowa - 5.3+
 ```{r}
 rm(list = ls())
 
 
-data <- read.csv(file="test_tp_NS3.csv", col.names = 
-                   c("Time","Video NS3","BE NS3","Voice NS3"))
+data <- read.csv(file="NS3_MultiSTA.csv", col.names = 
+                   c("Time","Wideo NS3-MN","Glos NS3-MN","Ruch tla NS3-MN"))
 
 gathered_data <- gather(data, key="Category", "Throughput", 2:4)
 
@@ -66,7 +70,7 @@ gathered_data <- gather(data, key="Category", "Throughput", 2:4)
 theme_set(theme_bw())
 
 
-plot1_ns3 <- ggplot(data=gathered_data, aes(x=Time, y=Throughput, group=Category)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category, shape=Category)) +labs(x = "Czas [s]", y = "Przepustowość [b/s]") + theme(axis.title.x = element_text(color = "black", size = 14), axis.title.y = element_text(color = "black", size = 14)) + ggtitle("Przepustowość dla scen.2 w NS-3") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
+plot1_ns3 <- ggplot(data=gathered_data, aes(x=Time, y=Throughput, group=Category)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category)) +labs(x = "Czas [s]", y = "Szybkosc transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Przeplywnosci dla scen.2 w NS") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
   scale_color_discrete(name="Typy danych:") +guides(colour = guide_legend(override.aes = list(size=1)))
 
 
@@ -74,12 +78,54 @@ plot1_ns3 <- ggplot(data=gathered_data, aes(x=Time, y=Throughput, group=Category
 plot1_ns3
 ```
 
-#Wykres Delay oraz Jitter w funkcji czasu bez uśrednienia per sekunda, czyli dane są per pakiet (z dopasowaną regresją linioną na wykresie)
 ```{r}
 rm(list = ls())
 
 
-data <- read.csv(file="test_delay_NS3.csv", col.names = 
+data <- read.csv(file="Ns3Mininet_AC_TP_1STA.csv", col.names = 
+                   c("Time","Wideo NS3-MN","Glos NS3-MN","Ruch tla NS3-MN"))
+
+gathered_data <- gather(data, key="Category", "Throughput", 2:4)
+
+#Common
+theme_set(theme_bw())
+
+
+plot1_ns3 <- ggplot(data=gathered_data, aes(x=Time, y=Throughput, group=Category)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category)) +labs(x = "Czas [s]", y = "Szybkosc transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Przeplywnosci dla scen.1 w NS-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
+  scale_color_discrete(name="Typy danych:") +guides(colour = guide_legend(override.aes = list(size=1)))
+
+
+
+plot1_ns3
+```
+
+```{r}
+rm(list = ls())
+
+
+data <- read.csv(file="Ns3Mininet_AC_TP_MSTA.csv", col.names = 
+                   c("Time","Wideo NS3-MN","Glos NS3-MN","Ruch tla NS3-MN"))
+
+gathered_data <- gather(data, key="Category", "Throughput", 2:4)
+
+#Common
+theme_set(theme_bw())
+
+
+plot1_ns3 <- ggplot(data=gathered_data, aes(x=Time, y=Throughput, group=Category)) + geom_line(aes(color=Category)) + geom_point(aes(color=Category)) +labs(x = "Czas [s]", y = "Szybkosc transmisji [b/s]") + theme(axis.title.x = element_text(color = "black", size = 12), axis.title.y = element_text(color = "black", size = 12)) + ggtitle("Przeplywnosci dla scen.2 w NS-MN") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12), legend.title = element_text(colour="chocolate", size=14, face="bold"))+
+  scale_color_discrete(name="Typy danych:") +guides(colour = guide_legend(override.aes = list(size=1)))
+
+
+
+plot1_ns3
+```
+
+#Wykres Delay - 5.2.2
+```{r}
+rm(list = ls())
+
+
+data <- read.csv(file="NS3_example_delay.csv", col.names = 
                    c("Time","Delay"))
 data$Delay <- data$Delay*1000
 
@@ -87,7 +133,7 @@ data$Delay <- data$Delay*1000
 theme_set(theme_bw())
 
 
-plot1_ns3 <- ggplot(data=data, aes(x=Time, y=Delay)) + geom_line(color="chocolate") + geom_point(color="firebrick") +labs(x = "Czas [s]", y = "VG(udp.time_delta) [ms]") + theme(axis.title.x = element_text(color = "black", size = 14), axis.title.y = element_text(color = "black", size = 10)) + ggtitle("Przykładowe średnie opóźnienie pakietów") + theme(legend.title = element_text(colour="chocolate", size=14, face="bold"))+ guides(colour = guide_legend(override.aes = list(size=1)))
+plot1_ns3 <- ggplot(data=data, aes(x=Time, y=Delay)) + geom_line(color="chocolate") + geom_point(color="firebrick") +labs(x = "Czas [s]", y = "AVG(udp.time_delta) [ms]") + theme(axis.title.x = element_text(color = "black", size = 14), axis.title.y = element_text(color = "black", size = 10)) + ggtitle("Przykładowe średnie opóźnienie pakietów") + theme(axis.text.x = element_text(size=12),axis.text.y = element_text(size=12),legend.title = element_text(colour="chocolate", size=14, face="bold"))+ guides(colour = guide_legend(override.aes = list(size=1)))
 
 
 
